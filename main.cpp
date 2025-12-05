@@ -2,14 +2,18 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
+#include <type_traits>
 #include <unordered_map>
 
-#define LruType LruNode<K, V>
-
 template <typename K, typename V> struct LruNode {
+  using LruType = LruNode<K, V>;
   K key;
   V val;
   int &size;
+  // Fix: Need to use std::weak_ptr for the prev pointer (which doesn't count
+  // towards ownership)
+  //  and keep std::shared_ptr only for the next pointer and the map values.
   std::shared_ptr<LruType> prev = nullptr;
   std::shared_ptr<LruType> next = nullptr;
   LruNode(K key, V val, int &size) : key(key), val(val), size(size) {
@@ -24,6 +28,10 @@ template <typename K, typename V> struct LruNode {
 };
 
 template <typename K, typename V, int SIZE> class LruList {
+  using KeyType =
+      std::conditional_t<std::is_same_v<K, std::string>, std::string, K>;
+  using LruType = LruNode<K, V>;
+
 public:
   LruList() {}
   ~LruList() {
@@ -33,7 +41,7 @@ public:
     }
   }
 
-  void Set(const K &key, const V &val) {
+  void Set(const KeyType &key, const V &val) {
     if (first == nullptr) {
       auto node = std::make_shared<LruType>(key, val, size);
       InitNode(node);
@@ -47,7 +55,7 @@ public:
       Delete(last);
   }
 
-  std::optional<V> Get(const K &key) {
+  std::optional<V> Get(const KeyType &key) {
     auto result = Find(key);
     if (result == nullptr) {
       return std::nullopt;
@@ -60,7 +68,11 @@ private:
   void InitNode(std::shared_ptr<LruType> node) {
     first = node;
     last = first;
-    key_db[node->key] = first;
+    if constexpr (std::is_same_v<KeyType, std::string_view>) {
+      key_db[std::string_view(node->key)] = first;
+    } else {
+      key_db[node->key] = first;
+    }
   }
   void MoveToStart(std::shared_ptr<LruType> node) {
     Delete(Find(node->key));
@@ -68,11 +80,14 @@ private:
       first->prev = node;
     node->next = first;
     first = node;
-    key_db[node->key] = node;
+    if constexpr (std::is_same_v<KeyType, std::string_view>) {
+      key_db[std::string_view(node->key)] = node;
+    } else {
+      key_db[node->key] = node;
+    }
   }
   void Delete(std::shared_ptr<LruType> node) {
     if (node != nullptr) {
-      key_db.erase(node->key);
       auto next = node->next;
       auto prev = node->prev;
       if (next == nullptr)
@@ -83,10 +98,12 @@ private:
         next->prev = prev;
       if (prev != nullptr)
         prev->next = next;
+
+      key_db.erase(node->key);
     }
   }
-  
-  std::shared_ptr<LruType> Find(const K &key) {
+
+  std::shared_ptr<LruType> Find(const KeyType &key) {
     auto item = key_db.find(key);
     if (item != key_db.end()) {
       return item->second;
@@ -99,7 +116,7 @@ private:
   std::shared_ptr<LruType> last = nullptr;
   int max_size = SIZE;
   int size = 0;
-  std::unordered_map<K, std::shared_ptr<LruType>> key_db;
+  std::unordered_map<KeyType, std::shared_ptr<LruType>> key_db;
 };
 
 void start_test() {
