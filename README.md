@@ -1,7 +1,10 @@
 # lru_cache
+### Build
+
 ```
 $ g++ -Wall -g -fsanitize=address,undefined  main.cpp  -o lru_cache && ./lru_cache
 ```
+### Output
 ```
 size:1 [new] key1:999
 size:2 [new] key2:888
@@ -19,4 +22,9 @@ size:3 [deleted] key4:666
 size:2 [deleted] key3:777
 size:1 [deleted] key2:888
 size:0 [deleted] key1:999
+```
+### Difficulty
+```
+Get O(1) average
+Set O(1) with no reorder
 ```
