@@ -42,17 +42,15 @@ public:
   }
 
   void Set(const KeyType &key, const V &val) {
+    auto node = std::make_shared<LruType>(key, val, size);
     if (first == nullptr) {
-      auto node = std::make_shared<LruType>(key, val, size);
       InitNode(node);
       return;
     }
-
-    auto node = std::make_shared<LruType>(key, val, size);
     MoveToStart(node);
-
+    AddNodeToDB(node);
     if (size > max_size)
-      Delete(last);
+      DeleteNode(last);
   }
 
   std::optional<V> Get(const KeyType &key) {
@@ -68,25 +66,19 @@ private:
   void InitNode(std::shared_ptr<LruType> node) {
     first = node;
     last = first;
-    if constexpr (std::is_same_v<KeyType, std::string_view>) {
-      key_db[std::string_view(node->key)] = first;
-    } else {
-      key_db[node->key] = first;
-    }
+    AddNodeToDB(node);
   }
+
   void MoveToStart(std::shared_ptr<LruType> node) {
-    Delete(Find(node->key));
-    if (first)
+    DeleteNode(Find(node->key));
+    if (first != nullptr) {
       first->prev = node;
+    }
     node->next = first;
     first = node;
-    if constexpr (std::is_same_v<KeyType, std::string_view>) {
-      key_db[std::string_view(node->key)] = node;
-    } else {
-      key_db[node->key] = node;
-    }
   }
-  void Delete(std::shared_ptr<LruType> node) {
+
+  void DeleteNode(std::shared_ptr<LruType> node) {
     if (node != nullptr) {
       auto next = node->next;
       auto prev = node->prev;
@@ -99,8 +91,20 @@ private:
       if (prev != nullptr)
         prev->next = next;
 
-      key_db.erase(node->key);
+      DelteNodeFromDB(node);
     }
+  }
+
+  void AddNodeToDB(std::shared_ptr<LruType> node) {
+    if constexpr (std::is_same_v<KeyType, std::string_view>) {
+      key_db[std::string_view(node->key)] = node;
+    } else {
+      key_db[node->key] = node;
+    }
+  }
+
+  void DelteNodeFromDB(std::shared_ptr<LruType> node) {
+    key_db.erase(node->key);
   }
 
   std::shared_ptr<LruType> Find(const KeyType &key) {
@@ -128,9 +132,9 @@ void start_test() {
   cache.Set("key5", 555);
   cache.Set("key6", 444);
 
-  std::cout << "before replace " << cache.Get("key5").value_or(0) << std::endl;
-  cache.Set("key5", 1000);
-  std::cout << "after replace " << cache.Get("key5").value_or(0) << std::endl;
+  std::cout << "before replace " << cache.Get("key1").value_or(0) << std::endl;
+  cache.Set("key1", 1000);
+  std::cout << "after replace " << cache.Get("key1").value_or(0) << std::endl;
 }
 int main() {
   start_test();

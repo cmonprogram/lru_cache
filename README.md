@@ -12,16 +12,16 @@ size:3 [new] key3:777
 size:4 [new] key4:666
 size:5 [new] key5:555
 size:6 [new] key6:444
-before replace 555
-size:7 [new] key5:1000
-size:6 [deleted] key5:555
+before replace 999
+size:7 [new] key1:1000
+size:6 [deleted] key1:999
 after replace 1000
-size:5 [deleted] key5:1000
+size:5 [deleted] key1:1000
 size:4 [deleted] key6:444
-size:3 [deleted] key4:666
-size:2 [deleted] key3:777
-size:1 [deleted] key2:888
-size:0 [deleted] key1:999
+size:3 [deleted] key5:555
+size:2 [deleted] key4:666
+size:1 [deleted] key3:777
+size:0 [deleted] key2:888
 ```
 ### Difficulty
 ```
