@@ -42,19 +42,14 @@ public:
   void Print() { /* nop */ }
 
   void Set(const K &key, const V &val) {
-    if (first == nullptr) {
-      auto node = std::make_shared<LruType>(key, val, size);
-      InitNode(node);
-      return;
-    }
     auto node = Find(key);
     if(node != nullptr){
       node->val = val;
     }else{
         node = std::make_shared<LruType>(key, val, size);
+        AddNodeToDB(node);
     }
     MoveToStart(node);
-    AddNodeToDB(node);
     if (size > max_size) {
       Delete(last);
     }
@@ -73,17 +68,15 @@ public:
   void Delete(std::shared_ptr<LruType> node) {
     if (node) {
       DelteNodeFromDB(node);
-      DeleteNode(node);
+      DetachNode(node);
     }
   }
 
   void Delete(const KeyType &key) {
     auto node = Find(key);
-    if (node) {
-      DelteNodeFromDB(node);
-      DeleteNode(node);
-    }
+    Delete(node);
   }
+
   void Clear() {
     while (last != nullptr) {
       Delete(last);
@@ -94,19 +87,12 @@ public:
   }
 
 private:
-  void InitNode(std::shared_ptr<LruType> node) {
-    if (node) {
-      first = node;
-      last = first;
-      AddNodeToDB(node);
-    }
-  }
 
   void MoveToStart(std::shared_ptr<LruType> node) {
     if (node) {
       if (first == node)
         return;
-      DeleteNode(node);
+      DetachNode(node);
       if (first != nullptr) {
         first->prev = node;
       }
@@ -120,7 +106,7 @@ private:
     }
   }
 
-  void DeleteNode(std::shared_ptr<LruType> node) {
+  void DetachNode(std::shared_ptr<LruType> node) {
     if (node) {
       auto next = node->next;
       auto prev = node->prev;
@@ -201,7 +187,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
 #else
 // clang++ -O3 main.cpp -o lru_cache && ./lru_cache
 void start_test() {
-  LruList<std::string, int, 3> cache;
+  LruList<std::string, int, 10> cache;
   cache.Set("key1", 999);
   cache.Set("key2", 888);
   cache.Set("key3", 777);
