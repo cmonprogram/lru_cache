@@ -42,10 +42,16 @@ public:
   void Print() { /* nop */ }
 
   void Set(const K &key, const V &val) {
-    auto node = std::make_shared<LruType>(key, val, size);
     if (first == nullptr) {
+      auto node = std::make_shared<LruType>(key, val, size);
       InitNode(node);
       return;
+    }
+    auto node = Find(key);
+    if(node != nullptr){
+      node->val = val;
+    }else{
+        node = std::make_shared<LruType>(key, val, size);
     }
     MoveToStart(node);
     AddNodeToDB(node);
@@ -100,7 +106,7 @@ private:
     if (node) {
       if (first == node)
         return;
-      Delete(node->key);
+      DeleteNode(node);
       if (first != nullptr) {
         first->prev = node;
       }
@@ -132,9 +138,9 @@ private:
   void AddNodeToDB(std::shared_ptr<LruType> node) {
     if (node) {
       if constexpr (std::is_same_v<KeyType, std::string_view>) {
-        key_db[std::string_view(node->key)] = node;
+        key_db.insert({std::string_view(node->key), node});
       } else {
-        key_db[node->key] = node;
+        key_db.insert({node->key, node});
       }
     }
   }
@@ -195,7 +201,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
 #else
 // clang++ -O3 main.cpp -o lru_cache && ./lru_cache
 void start_test() {
-  LruList<std::string, int, 10> cache;
+  LruList<std::string, int, 3> cache;
   cache.Set("key1", 999);
   cache.Set("key2", 888);
   cache.Set("key3", 777);
@@ -203,9 +209,9 @@ void start_test() {
   cache.Set("key5", 555);
   cache.Set("key6", 444);
   cache.Delete("key2");
-  std::cout << "before replace " << cache.Get("key1").value_or(0) << std::endl;
-  cache.Set("key1", 1000);
-  std::cout << "after replace " << cache.Get("key1").value_or(0) << std::endl;
+  std::cout << "before replace " << cache.Get("key5").value_or(0) << std::endl;
+  cache.Set("key5", 1000);
+  std::cout << "after replace " << cache.Get("key5").value_or(0) << std::endl;
 }
 int main() {
   start_test();
