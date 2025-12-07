@@ -39,6 +39,8 @@ public:
   LruList() {}
   ~LruList() { Clear(); }
 
+  void Print() { /* nop */ }
+
   void Set(const K &key, const V &val) {
     auto node = std::make_shared<LruType>(key, val, size);
     if (first == nullptr) {
@@ -46,7 +48,6 @@ public:
       return;
     }
     MoveToStart(node);
-
     if (size > max_size)
       Delete(last);
   }
@@ -70,7 +71,7 @@ public:
     auto node = Find(key);
     if (node) {
       DelteNodeFromDB(node);
-      DeleteNode(node); 
+      DeleteNode(node);
     }
   }
   void Clear() {
@@ -149,7 +150,8 @@ private:
 };
 
 #ifdef FUZZING
-//clang++ -O0 -Wall -g -fsanitize=fuzzer,address,undefined,leak -DFUZZING -DNOPRINT main.cpp  -o lru_cache && ./lru_cache
+// clang++ -O0 -Wall -g -fsanitize=fuzzer,address,undefined,leak -DFUZZING
+// -DNOPRINT main.cpp  -o lru_cache && ./lru_cache
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
   if (Size < 6) {
     return -1;
@@ -179,7 +181,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
   return 0;
 }
 #else
-//clang++ -O3 main.cpp -o lru_cache && ./lru_cache
+// clang++ -O3 main.cpp -o lru_cache && ./lru_cache
 void start_test() {
   LruList<std::string, int, 10> cache;
   cache.Set("key1", 999);

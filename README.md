@@ -22,11 +22,11 @@ before replace 999
 size:6 [new] key1:1000
 size:5 [deleted] key1:999
 after replace 1000
-size:4 [deleted] key1:1000
-size:3 [deleted] key6:444
+size:4 [deleted] key3:777
+size:3 [deleted] key4:666
 size:2 [deleted] key5:555
-size:1 [deleted] key4:666
-size:0 [deleted] key3:777
+size:1 [deleted] key6:444
+size:0 [deleted] key1:1000
 ```
 ### Difficulty
 ```
