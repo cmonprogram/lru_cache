@@ -19,12 +19,16 @@ template <typename K, typename V> struct LruNode {
   std::shared_ptr<LruType> next = nullptr;
   LruNode(K key, V val, int &size) : key(key), val(val), size(size) {
     ++size;
+    #ifndef NOPRINT
     std::cout << "size:" << size << " [new] " << key << ":" << val << std::endl;
+    #endif
   }
   ~LruNode() {
     --size;
+     #ifndef NOPRINT
     std::cout << "size:" << size << " [deleted] " << key << ":" << val
               << std::endl;
+     #endif
   }
 };
 
@@ -136,7 +140,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
   if (Data[0] > 128) {
     cache.Set(key,val);
   } else {
-    std::cout << "GET: " << cache.Get(key).value_or(0) << std::endl;
+   volatile auto  val = cache.Get(key).value_or(0);
   }
   return 0;
 }
