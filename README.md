@@ -7,7 +7,7 @@ $ clang++ -O3 main.cpp -o lru_cache && ./lru_cache
 ```
 ```
 test
-$ clang++ -O0 -Wall -g -fsanitize=fuzzer,address,undefined,leak -DFUZZING -DNOPRINT main.cpp  -o lru_cache && ./lru_cache
+$ clang++ -O0 -Wall -g -fsanitize=fuzzer,address,undefined,leak -DFUZZING -DNOPRINT main.cpp  -o lru_cache && ./lru_cache -use_value_profile=1 -workers=2 -reload=0 
 ```
 ### Output
 ```

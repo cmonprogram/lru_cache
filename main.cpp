@@ -48,8 +48,10 @@ public:
       return;
     }
     MoveToStart(node);
-    if (size > max_size)
+    AddNodeToDB(node);
+    if (size > max_size) {
       Delete(last);
+    }
   }
 
   std::optional<V> Get(const KeyType &key) {
@@ -63,8 +65,10 @@ public:
   }
 
   void Delete(std::shared_ptr<LruType> node) {
-    DelteNodeFromDB(node);
-    DeleteNode(node);
+    if (node) {
+      DelteNodeFromDB(node);
+      DeleteNode(node);
+    }
   }
 
   void Delete(const KeyType &key) {
@@ -78,6 +82,9 @@ public:
     while (last != nullptr) {
       Delete(last);
     }
+#ifndef NOPRINT
+    std::cout << "size:" << size << " [clear] " << std::endl;
+#endif
   }
 
 private:
@@ -91,14 +98,19 @@ private:
 
   void MoveToStart(std::shared_ptr<LruType> node) {
     if (node) {
+      if (first == node)
+        return;
       Delete(node->key);
       if (first != nullptr) {
         first->prev = node;
       }
+      if (last == nullptr) {
+        last = node;
+      }
+
       node->next = first;
       node->prev.reset();
       first = node;
-      AddNodeToDB(node);
     }
   }
 
@@ -106,9 +118,9 @@ private:
     if (node) {
       auto next = node->next;
       auto prev = node->prev;
-      if (next == nullptr)
+      if (node == last)
         last = prev;
-      if (prev == nullptr)
+      if (node == first)
         first = next;
       if (next != nullptr)
         next->prev = prev;
@@ -120,9 +132,9 @@ private:
   void AddNodeToDB(std::shared_ptr<LruType> node) {
     if (node) {
       if constexpr (std::is_same_v<KeyType, std::string_view>) {
-        key_db.insert({std::string_view(node->key), node});
+        key_db[std::string_view(node->key)] = node;
       } else {
-        key_db.insert({node->key, node});
+        key_db[node->key] = node;
       }
     }
   }
