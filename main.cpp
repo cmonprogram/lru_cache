@@ -1,6 +1,7 @@
 #include <iostream>
 #include <memory>
 #include <optional>
+#include <stdint.h>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -123,6 +124,23 @@ private:
   std::unordered_map<KeyType, std::shared_ptr<LruType>> key_db;
 };
 
+#ifdef FUZZING
+//clang++ -g -fsanitize=address,fuzzer,undefined main.cpp
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
+  if (Size < 6) {
+    return 0;
+  }
+  static LruList<std::string, int, 1000> cache;
+  std::string key = std::string((char *)Data + 5, Size - 5);
+  int val = Data[1] << 24 | Data[2] << 16 | Data[3] << 8 | Data[4];
+  if (Data[0] > 128) {
+    cache.Set(key,val);
+  } else {
+    std::cout << "GET: " << cache.Get(key).value_or(0) << std::endl;
+  }
+  return 0;
+}
+#else
 void start_test() {
   LruList<std::string, int, 10> cache;
   cache.Set("key1", 999);
@@ -140,3 +158,4 @@ int main() {
   start_test();
   return 1;
 }
+#endif

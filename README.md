@@ -2,7 +2,12 @@
 ### Build
 
 ```
-$ g++ -Wall -g -fsanitize=address,undefined  main.cpp  -o lru_cache && ./lru_cache
+prod
+$ clang++ -O3 main.cpp -o lru_cache && ./lru_cache
+```
+```
+test
+$ clang++ -O0 -Wall -g -fsanitize=fuzzer,address,undefined,leak -DFUZZING  main.cpp  -o lru_cache && ./lru_cache
 ```
 ### Output
 ```
