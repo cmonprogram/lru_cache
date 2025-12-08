@@ -16,7 +16,7 @@ template <typename K, typename V> struct LruNode {
   int &size;
 
   // Fix: Need to use std::weak_ptr for the prev pointer
-  std::shared_ptr<LruType> prev = nullptr;
+   std::weak_ptr<LruType> prev;
   std::shared_ptr<LruType> next = nullptr;
   LruNode(K key, V val, int &size) : key(key), val(val), size(size) {
     ++size;
@@ -34,8 +34,10 @@ template <typename K, typename V> struct LruNode {
 };
 
 template <typename K, typename V>
-std::ostream &operator<<(std::ostream &in, LruNode<K, V> *obj) {
-  in << "[" << obj->key << ":" << obj->val << "]";
+std::ostream &operator<<(std::ostream &in, LruNode<K, V> *elem) {
+  if(elem){
+    in << "[" << elem->key << ":" << elem->val << "]";
+  }
   return in;
 }
 
@@ -45,8 +47,6 @@ template <typename K, typename V, int SIZE> class LruList {
   using LruType = LruNode<K, V>;
 
 public:
-  ~LruList() { Clear(); }
-
   void Print() {
     std::cout << "size:" << size << " ";
     auto elem = first;
@@ -65,7 +65,7 @@ public:
     if (node != nullptr) {
       node->val = val;
 #ifndef NOPRINT
-      std::cout << "size:" << size << " [changed] " << key << ":" << val
+      std::cout << "size:" << size << " [update] " << key << ":" << val
                 << std::endl;
 #endif
     } else {
@@ -101,9 +101,9 @@ public:
   }
 
   void Clear() {
-    while (last != nullptr) {
-      Delete(last);
-    }
+    first = nullptr;
+    key_db.clear();
+    last = nullptr;
 #ifndef NOPRINT
     std::cout << "size:" << size << " [clear] " << std::endl;
 #endif
@@ -131,7 +131,7 @@ private:
   void DetachNode(std::shared_ptr<LruType> node) {
     if (node) {
       auto next = node->next;
-      auto prev = node->prev;
+      auto prev = node->prev.lock();       //reuturn sared_ptr / nullptr (if obext not exist)
       if (node == last)
         last = prev;
       if (node == first)

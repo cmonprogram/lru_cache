@@ -19,14 +19,13 @@ size:5 [new] key5:555
 size:6 [new] key6:444
 size:6 [key6:444][key5:555][key4:666][key3:777][key2:888][key1:999]
 size:5 [deleted] key2:888
-size:5 [changed] key5:1000
+size:5 [update] key5:1000
 size:5 [key5:1000][key6:444][key4:666][key3:777][key1:999]
-size:4 [deleted] key1:999
-size:3 [deleted] key3:777
+size:4 [deleted] key5:1000
+size:3 [deleted] key6:444
 size:2 [deleted] key4:666
-size:1 [deleted] key6:444
-size:0 [deleted] key5:1000
-size:0 [clear]
+size:1 [deleted] key3:777
+size:0 [deleted] key1:999
 ```
 ### Difficulty
 ```
