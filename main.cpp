@@ -1,6 +1,7 @@
 #include <iostream>
 #include <memory>
 #include <optional>
+#include <ostream>
 #include <stdint.h>
 #include <string>
 #include <string_view>
@@ -9,9 +10,11 @@
 
 template <typename K, typename V> struct LruNode {
   using LruType = LruNode<K, V>;
+  friend std::ostream &operator<<(std::ostream &os, const LruType &dt);
   K key;
   V val;
   int &size;
+
   // Fix: Need to use std::weak_ptr for the prev pointer
   std::shared_ptr<LruType> prev = nullptr;
   std::shared_ptr<LruType> next = nullptr;
@@ -30,24 +33,44 @@ template <typename K, typename V> struct LruNode {
   }
 };
 
+template <typename K, typename V>
+std::ostream &operator<<(std::ostream &in, LruNode<K, V> *obj) {
+  in << "[" << obj->key << ":" << obj->val << "]";
+  return in;
+}
+
 template <typename K, typename V, int SIZE> class LruList {
   using KeyType =
       std::conditional_t<std::is_same_v<K, std::string>, std::string_view, K>;
   using LruType = LruNode<K, V>;
 
 public:
-  LruList() {}
   ~LruList() { Clear(); }
 
-  void Print() { /* nop */ }
+  void Print() {
+    std::cout << "size:" << size << " ";
+    auto elem = first;
+    if (elem) {
+      while (elem->next) {
+        std::cout << elem;
+        elem = elem->next;
+      }
+      std::cout << elem;
+    }
+    std::cout << std::endl;
+  }
 
   void Set(const K &key, const V &val) {
     auto node = Find(key);
-    if(node != nullptr){
+    if (node != nullptr) {
       node->val = val;
-    }else{
-        node = std::make_shared<LruType>(key, val, size);
-        AddNodeToDB(node);
+#ifndef NOPRINT
+      std::cout << "size:" << size << " [changed] " << key << ":" << val
+                << std::endl;
+#endif
+    } else {
+      node = std::make_shared<LruType>(key, val, size);
+      AddNodeToDB(node);
     }
     MoveToStart(node);
     if (size > max_size) {
@@ -87,7 +110,6 @@ public:
   }
 
 private:
-
   void MoveToStart(std::shared_ptr<LruType> node) {
     if (node) {
       if (first == node)
@@ -187,6 +209,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
 #else
 // clang++ -O3 main.cpp -o lru_cache && ./lru_cache
 void start_test() {
+
   LruList<std::string, int, 10> cache;
   cache.Set("key1", 999);
   cache.Set("key2", 888);
@@ -194,10 +217,10 @@ void start_test() {
   cache.Set("key4", 666);
   cache.Set("key5", 555);
   cache.Set("key6", 444);
+  cache.Print();
   cache.Delete("key2");
-  std::cout << "before replace " << cache.Get("key5").value_or(0) << std::endl;
   cache.Set("key5", 1000);
-  std::cout << "after replace " << cache.Get("key5").value_or(0) << std::endl;
+  cache.Print();
 }
 int main() {
   start_test();
