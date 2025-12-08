@@ -90,7 +90,7 @@ public:
 
   void Delete(std::shared_ptr<LruType> node) {
     if (node) {
-      DelteNodeFromDB(node);
+      DeleteNodeFromDB(node);
       DetachNode(node);
     }
   }
@@ -153,7 +153,7 @@ private:
     }
   }
 
-  void DelteNodeFromDB(std::shared_ptr<LruType> node) {
+  void DeleteNodeFromDB(std::shared_ptr<LruType> node) {
     if (node) {
       key_db.erase(node->key);
     }

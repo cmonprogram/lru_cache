@@ -1,4 +1,4 @@
-# lru_cache
+# lru_cache [thread unsafe]
 ### Build
 
 ```
